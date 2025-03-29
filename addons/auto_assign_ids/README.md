@@ -1,18 +1,19 @@
 # AutoAssignIDs Plugin for Godot 4.4
 
-This plugin automatically assigns unique IDs to your `class_name ItemData` resources.
+This plugin automatically assigns unique IDs to resources and its subclasses saved as `.tres` files.
 
-**Note:** Each `.tres` item file must have `@export var ID: int = -1` for the plugin to work.
+**Note:** Your root item script (`class_name ItemData` by default) should include `@export var ID: int = -1` for the plugin to work!
 
 ## Features
 
 - **Automatic ID Assignment:** Detects and fixes duplicate/missing IDs.
 - **Manual & Auto Refresh:** Trigger refresh manually or set a configurable check interval.
-- **Folder Management:** Easily add/remove folders to scan for `.tres` files.
+- **Folder Management:** Easily add/remove folders to scan for `.tres` files with specified `class_name` root.
 - **Options:**
   - **Refresh Item IDs:** Resets only IDs that are lower than 0.
-  - **Reset ALL IDs:** Resets all IDs.
+  - **Reset ALL IDs:** Sets all IDs to -1 and refreshes them.
 - **Scanning:** Folders are scanned recursively, sorted alphabetically, and prioritized.
+- **Saving:** All your UI changes are saved.
 
 [Visit GitHub page for more visuals](https://github.com/CyrylSz/godot-auto-assign-IDs)
 

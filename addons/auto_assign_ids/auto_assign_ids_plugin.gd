@@ -2,6 +2,8 @@
 extends EditorPlugin
 
 var item_folders: Array = ["res://item/items/"]
+var root_class_name: String = "ItemData"
+var root_class_name_field: LineEdit
 const CHECK_INTERVAL = 5.0
 
 var refresh_button: Button
@@ -22,7 +24,7 @@ var folder_manager_dialog: Window
 var folder_vbox: VBoxContainer
 var add_button: Button
 var config: ConfigFile = ConfigFile.new()
-var config_path: String = "res://addons/auto_assign_ids/auto_assign_ids.cfg"
+var config_path: String = "user://auto_assign_ids.cfg"
 
 func _enter_tree():
 	print("[AutoAssignIDs] Plugin enabled.")
@@ -32,10 +34,16 @@ func _enter_tree():
 
 	if config.load(config_path) == OK:
 		item_folders = config.get_value("folders", "item_folders", ["res://item/items/"])
+		root_class_name = config.get_value("class", "root_class_name", "ItemData")
 	else:
 		item_folders = ["res://item/items/"]
+		root_class_name = "ItemData"
 		config.set_value("folders", "item_folders", item_folders)
+		config.set_value("class", "root_class_name", root_class_name)
 		config.save(config_path)
+
+	var auto_refresh_enabled = config.get_value("refresh", "auto_refresh_enabled", false)
+	var check_interval = config.get_value("refresh", "check_interval", 5.0)
 
 	main_button = Button.new()
 	main_button.icon = preload("res://addons/auto_assign_ids/icon.png")
@@ -112,7 +120,7 @@ func _enter_tree():
 	vbox.add_child(auto_label)
 	auto_refresh_checkbox = CheckBox.new()
 	auto_refresh_checkbox.text = "Enable Automatic Refresh"
-	auto_refresh_checkbox.button_pressed = true
+	auto_refresh_checkbox.button_pressed = auto_refresh_enabled
 	vbox.add_child(auto_refresh_checkbox)
 	var interval_hbox = HBoxContainer.new()
 	var interval_label = Label.new()
@@ -122,7 +130,7 @@ func _enter_tree():
 	check_interval_spinbox.min_value = 1
 	check_interval_spinbox.max_value = 60
 	check_interval_spinbox.step = 1
-	check_interval_spinbox.value = 5
+	check_interval_spinbox.value = check_interval
 	interval_hbox.add_child(check_interval_spinbox)
 	vbox.add_child(interval_hbox)
 
@@ -149,18 +157,34 @@ func _enter_tree():
 	scroll_container.add_child(folder_vbox)
 
 	add_button = Button.new()
-	add_button.text = "+"
+	add_button.text = "➕"
+	add_button.custom_minimum_size = Vector2(390, 0)
 	add_button.pressed.connect(Callable(self, "add_folder_line"))
 	folder_vbox.add_child(add_button)
 
+	var class_name_hbox = HBoxContainer.new()
+	var label = Label.new()
+	label.text = "root class_name:"
+	class_name_hbox.add_child(label)
+	root_class_name_field = LineEdit.new()
+	root_class_name_field.custom_minimum_size = Vector2(250, 0)
+	class_name_hbox.add_child(root_class_name_field)
+	dialog_vbox.add_child(class_name_hbox)
+
 	var save_button = Button.new()
-	save_button.text = "Save"
+	save_button.text = "💾Save"
+	var style_box = StyleBoxFlat.new()
+	style_box.bg_color = Color.BLUE
+	save_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	save_button.add_theme_stylebox_override("normal", style_box)
+	save_button.add_theme_stylebox_override("hover", style_box)
+	save_button.add_theme_stylebox_override("pressed", style_box)
 	save_button.pressed.connect(Callable(self, "save_folder_paths"))
 	dialog_vbox.add_child(save_button)
 
 	base_control.add_child(folder_manager_dialog)
 
-	on_auto_refresh_toggled(true)
+	on_auto_refresh_toggled(auto_refresh_enabled)
 
 	assign_ids()
 
@@ -217,12 +241,14 @@ func on_auto_refresh_toggled(toggled: bool):
 	else:
 		file_check_timer.stop()
 	check_interval_spinbox.editable = toggled
+	save_refresh_settings()
 
 func on_check_interval_changed(value: float):
 	file_check_timer.wait_time = value
 	if not file_check_timer.is_stopped():
 		file_check_timer.stop()
 		file_check_timer.start()
+	save_refresh_settings()
 
 func check_for_new_files():
 	assign_ids()
@@ -232,7 +258,7 @@ func reset_all_ids():
 	var file_paths = get_all_tres_files(item_folders)
 	for path in file_paths:
 		var resource = load(path)
-		if resource and resource is ItemData:
+		if resource and is_subclass_of(resource, root_class_name):
 			resource.ID = -1
 			ResourceSaver.save(resource, path)
 	assign_ids()
@@ -244,7 +270,7 @@ func assign_ids():
 
 	for path in file_paths:
 		var resource = load(path)
-		if resource and resource is ItemData:
+		if resource and is_subclass_of(resource, root_class_name):
 			if resource.ID in used_ids:
 				resources_to_assign.append({"path": path, "resource": resource})
 				printerr("[AutoAssignIDs] Duplicate ID=", resource.ID, " detected! Issue fixed automatically.")
@@ -301,6 +327,7 @@ func get_tres_files_recursive(folder: String) -> Array:
 
 func open_folder_manager():
 	populate_folder_lines()
+	root_class_name_field.text = root_class_name
 	folder_manager_dialog.popup()
 	call_deferred("center_window_folder_manager")
 
@@ -321,9 +348,9 @@ func populate_folder_lines():
 		var line_edit = LineEdit.new()
 		line_edit.text = folder
 		line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		line_edit.custom_minimum_size = Vector2(200, 0)
 		var minus_button = Button.new()
-		minus_button.text = "-"
+		minus_button.text = "➖"
+		minus_button.custom_minimum_size = Vector2(40, 0)
 		minus_button.pressed.connect(Callable(self, "remove_folder_line").bind(hbox))
 		hbox.add_child(line_edit)
 		hbox.add_child(minus_button)
@@ -336,9 +363,9 @@ func add_folder_line():
 	var line_edit = LineEdit.new()
 	line_edit.text = ""
 	line_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line_edit.custom_minimum_size = Vector2(200, 0)
 	var minus_button = Button.new()
-	minus_button.text = "-"
+	minus_button.text = "➖"
+	minus_button.custom_minimum_size = Vector2(40, 0)
 	minus_button.pressed.connect(Callable(self, "remove_folder_line").bind(hbox))
 	hbox.add_child(line_edit)
 	hbox.add_child(minus_button)
@@ -349,12 +376,32 @@ func remove_folder_line(hbox: HBoxContainer):
 	hbox.queue_free()
 
 func save_folder_paths():
-	item_folders = []
+	var new_folders = []
 	for child in folder_vbox.get_children():
 		if child is HBoxContainer:
 			var line_edit = child.get_child(0) as LineEdit
 			if line_edit and line_edit.text.strip_edges() != "":
-				item_folders.append(line_edit.text.strip_edges())
-	config.set_value("folders", "item_folders", item_folders)
-	config.save(config_path)
+				new_folders.append(line_edit.text.strip_edges())
+	var new_root_class_name = root_class_name_field.text
+	
+	# Only save if something changed
+	if new_folders != item_folders or new_root_class_name != root_class_name:
+		item_folders = new_folders
+		root_class_name = new_root_class_name
+		config.set_value("folders", "item_folders", item_folders)
+		config.set_value("class", "root_class_name", root_class_name)
+		config.save(config_path)
 	assign_ids()
+
+func is_subclass_of(resource: Resource, c_name: String) -> bool:
+	var script = resource.get_script()
+	while script:
+		if script.get_global_name() == c_name:
+			return true
+		script = script.get_base_script()
+	return false
+
+func save_refresh_settings():
+	config.set_value("refresh", "auto_refresh_enabled", auto_refresh_checkbox.button_pressed)
+	config.set_value("refresh", "check_interval", check_interval_spinbox.value)
+	config.save(config_path)
