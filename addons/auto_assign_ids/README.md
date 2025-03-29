@@ -14,6 +14,8 @@ This plugin automatically assigns unique IDs to your `class_name ItemData` resou
   - **Reset ALL IDs:** Resets all IDs.
 - **Scanning:** Folders are scanned recursively, sorted alphabetically, and prioritized.
 
+[Visit GitHub page for more visuals](https://github.com/CyrylSz/godot-auto-assign-IDs)
+
 ## Installation
 
 1. Place the plugin folder in your project's `res://addons/` directory.
