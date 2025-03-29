@@ -384,7 +384,6 @@ func save_folder_paths():
 				new_folders.append(line_edit.text.strip_edges())
 	var new_root_class_name = root_class_name_field.text
 	
-	# Only save if something changed
 	if new_folders != item_folders or new_root_class_name != root_class_name:
 		item_folders = new_folders
 		root_class_name = new_root_class_name

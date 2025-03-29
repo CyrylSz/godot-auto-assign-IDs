@@ -2,7 +2,7 @@
 
 This plugin automatically assigns unique IDs to resources and its subclasses saved as `.tres` files.
 
-**Note:** Your root item script (`class_name ItemData` by default) should include `@export var ID: int = -1` for the plugin to work!
+**Note:** Your root item script should include `@export var ID: int = -1`.
 
 ## Features
 
