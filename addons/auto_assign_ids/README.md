@@ -10,7 +10,7 @@ This plugin automatically assigns unique IDs to resources and its subclasses sav
 - **Manual & Auto Refresh:** Trigger refresh manually or set a configurable check interval.
 - **Folder Management:** Easily add/remove folders to scan for `.tres` files with specified `class_name` root.
 - **Options:**
-  - **Refresh Item IDs:** Resets only IDs that are lower than 0.
+  - **Refresh IDs:** Resets only item IDs that are lower than 0.
   - **Reset ALL IDs:** Sets all IDs to -1 and refreshes them.
 - **Scanning:** Folders are scanned recursively, sorted alphabetically, and prioritized.
 - **Saving:** All your UI changes are saved.
