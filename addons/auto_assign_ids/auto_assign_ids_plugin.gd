@@ -483,7 +483,7 @@ func print_folder_tree(folder_path: String, indent: String):
 	if not has_content and subdirs.size() == 0:
 		return
 
-	print_rich(indent + "- [color=#e7dfc6]" + folder_name + "[/color]:")
+	print_rich(indent + "- [color=#eef36a]" + folder_name + "[/color]:")
 
 	for subdir in subdirs:
 		var subdir_path = folder_path + "/" + subdir
