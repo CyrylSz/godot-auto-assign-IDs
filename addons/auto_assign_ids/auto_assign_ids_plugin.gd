@@ -182,7 +182,7 @@ func _enter_tree():
 	var save_button = Button.new()
 	save_button.text = "💾Save"
 	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color.REBECCA_PURPLE
+	style_box.bg_color = Color.BLUE
 	save_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	save_button.add_theme_stylebox_override("normal", style_box)
 	save_button.add_theme_stylebox_override("hover", style_box)
@@ -443,7 +443,8 @@ func save_refresh_settings():
 	config.save(config_path)
 
 func print_tree():
-	print_rich("[color=#73fbd3][AutoAssignIDs] Printing...[/color]")
+	var count = count_matching_items()
+	print_rich("[color=#73fbd3][AutoAssignIDs] " + str(count) + " Items → IDs printed.[/color]")
 	var sorted_folders = item_folders.duplicate()
 	sorted_folders.sort()
 	for root_folder in sorted_folders:
@@ -482,7 +483,7 @@ func print_folder_tree(folder_path: String, indent: String):
 	if not has_content and subdirs.size() == 0:
 		return
 
-	print_rich(indent + "- [color=yellow]" + folder_name + "[/color]")
+	print_rich(indent + "- [color=#e7dfc6]" + folder_name + "[/color]:")
 
 	for subdir in subdirs:
 		var subdir_path = folder_path + "/" + subdir
@@ -497,3 +498,12 @@ func print_folder_tree(folder_path: String, indent: String):
 			var file_name_colored = "[color=#afcbff]" + name + "[/color]"
 			var id_colored = "[color=#C89BFF]" + str(id) + "[/color]"
 			print_rich(indent + "    - " + file_name_colored + " → " + id_colored)
+
+func count_matching_items() -> int:
+	var count = 0
+	var file_paths = get_all_tres_files(item_folders)
+	for path in file_paths:
+		var resource = load(path)
+		if resource and is_subclass_of(resource, root_class_name):
+			count += 1
+	return count
